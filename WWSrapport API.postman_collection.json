@@ -1,0 +1,276 @@
+{
+  "info": {
+    "_postman_id": "6cdad1af-wwsr-public-api",
+    "name": "WWSrapport API",
+    "description": "Official Postman collection for the WWSrapport public API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'Accept', value: 'application/json' });",
+          "if (!pm.request.headers.has('Content-Type') && ['POST', 'PATCH'].includes(pm.request.method)) {",
+          "  pm.request.headers.upsert({ key: 'Content-Type', value: 'application/json' });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Properties",
+      "item": [
+        {
+          "name": "Prefill property",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/properties/prefill",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": {\n    \"postcode\": \"3905RB\",\n    \"house_number\": \"4\",\n    \"country\": \"NL\"\n  }\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Validate report input",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/reports/validate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": {\n    \"postcode\": \"3905RB\",\n    \"house_number\": \"4\",\n    \"country\": \"NL\"\n  },\n  \"input\": {\n    \"living_area_m2\": 53,\n    \"energy_label\": \"E\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Create report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json.id || json.data?.id || json.public_id || json.data?.public_id;",
+                  "if (id) pm.environment.set('report_id', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotency_key}}"
+              }
+            ],
+            "url": "{{base_url}}/reports",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": {\n    \"postcode\": \"3905RB\",\n    \"house_number\": \"4\",\n    \"country\": \"NL\"\n  },\n  \"customer_reference\": \"crm-demo-001\",\n  \"metadata\": {\n    \"source\": \"postman\"\n  },\n  \"input\": {\n    \"living_area_m2\": 53,\n    \"energy_label\": \"E\",\n    \"woz_value\": 290000\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Recalculate report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "recalculate-{{idempotency_key}}"
+              }
+            ],
+            "url": "{{base_url}}/reports/{{report_id}}/recalculate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rule_version\": \"latest\",\n  \"refresh_sources\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "List reports",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/reports?limit=25"
+          }
+        },
+        {
+          "name": "Get report",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/reports/{{report_id}}"
+          }
+        },
+        {
+          "name": "Get calculation JSON",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/reports/{{report_id}}/calculation"
+          }
+        },
+        {
+          "name": "Get improvement advice JSON",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/reports/{{report_id}}/improvement-advice"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "List documents",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/reports/{{report_id}}/documents"
+          }
+        },
+        {
+          "name": "Download WWS report PDF",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/reports/{{report_id}}/documents/wws-report"
+          }
+        },
+        {
+          "name": "Download improvement advice PDF",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/reports/{{report_id}}/documents/improvement-advice"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usage and rulesets",
+      "item": [
+        {
+          "name": "Current usage",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/usage/current"
+          }
+        },
+        {
+          "name": "Usage history",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/usage/history"
+          }
+        },
+        {
+          "name": "Rulesets",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/rulesets"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "List webhooks",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/webhooks"
+          }
+        },
+        {
+          "name": "Create webhook",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const id = json.id || json.data?.id;",
+                  "if (id) pm.environment.set('webhook_id', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/webhooks",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com/wwsrapport/webhook\",\n  \"events\": [\"report.completed\", \"document.ready\"],\n  \"description\": \"Postman demo endpoint\",\n  \"enabled\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get webhook",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/webhooks/{{webhook_id}}"
+          }
+        },
+        {
+          "name": "Update webhook",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/webhooks/{{webhook_id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true,\n  \"events\": [\"report.completed\", \"document.ready\", \"webhook.test\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Send test webhook",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/webhooks/{{webhook_id}}/test"
+          }
+        },
+        {
+          "name": "List webhook deliveries",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/webhooks/{{webhook_id}}/deliveries"
+          }
+        },
+        {
+          "name": "Retry delivery",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/webhooks/{{webhook_id}}/deliveries/{{delivery_id}}/retry"
+          }
+        },
+        {
+          "name": "Delete webhook",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/webhooks/{{webhook_id}}"
+          }
+        }
+      ]
+    }
+  ]
+}
+
