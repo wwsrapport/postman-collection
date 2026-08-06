@@ -31,6 +31,23 @@
   ],
   "item": [
     {
+      "name": "Solana registry",
+      "item": [
+        {
+          "name": "Derive BAG HMAC reference",
+          "request": {"method": "POST", "url": "{{base_url}}/registry/bag-reference", "body": {"mode": "raw", "raw": "{\n  \"bagVboId\": \"0123456789012345\"\n}"}}
+        },
+        {
+          "name": "Search attestations by BAG ID",
+          "request": {"method": "POST", "url": "{{base_url}}/registry/search-by-bag", "body": {"mode": "raw", "raw": "{\n  \"bagVboId\": \"0123456789012345\"\n}"}}
+        },
+        {
+          "name": "Get report verification and Solana status",
+          "request": {"method": "GET", "url": "{{base_url}}/reports/{{report_id}}/verification"}
+        }
+      ]
+    },
+    {
       "name": "Properties",
       "item": [
         {
@@ -219,7 +236,7 @@
             "url": "{{base_url}}/webhooks",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"url\": \"https://example.com/wwsrapport/webhook\",\n  \"events\": [\"report.completed\", \"document.ready\"],\n  \"description\": \"Postman demo endpoint\",\n  \"enabled\": true\n}"
+              "raw": "{\n  \"url\": \"https://example.com/wwsrapport/webhook\",\n  \"events\": [\\"report.queued\\", \\"report.processing\\", \\"report.calculation.ready\\", \\"report.improvement-advice.ready\\", \\"report.blockchain.finalized\\", \\"report.completed\\", \\"report.failed\\", \\"report.issued\\", \\"report.signature.completed\\", \\"report.signature.failed\\", \\"report.registry.submitted\\", \\"report.registry.confirmed\\", \\"report.registry.failed\\", \\"report.superseded\\", \\"report.cancelled\\", \\"report.documents.ready\\", \\"report.document.failed\\", \\"monitor.created\\", \\"monitor.updated\\", \\"monitor.check_completed\\", \\"monitor.event_created\\", \\"monitor.event_resolved\\", \\"impact_preview.created\\", \\"listing_check.completed\\", \\"report_job.updated\\", \\"ruleset.changed\\", \\"source.freshness_warning\\"],\n  \"description\": \"Postman demo endpoint\",\n  \"enabled\": true\n}"
             }
           }
         },
@@ -237,7 +254,7 @@
             "url": "{{base_url}}/webhooks/{{webhook_id}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"enabled\": true,\n  \"events\": [\"report.completed\", \"document.ready\", \"webhook.test\"]\n}"
+              "raw": "{\n  \"enabled\": true,\n  \"events\": [\\"report.queued\\", \\"report.processing\\", \\"report.calculation.ready\\", \\"report.improvement-advice.ready\\", \\"report.blockchain.finalized\\", \\"report.completed\\", \\"report.failed\\", \\"report.issued\\", \\"report.signature.completed\\", \\"report.signature.failed\\", \\"report.registry.submitted\\", \\"report.registry.confirmed\\", \\"report.registry.failed\\", \\"report.superseded\\", \\"report.cancelled\\", \\"report.documents.ready\\", \\"report.document.failed\\", \\"monitor.created\\", \\"monitor.updated\\", \\"monitor.check_completed\\", \\"monitor.event_created\\", \\"monitor.event_resolved\\", \\"impact_preview.created\\", \\"listing_check.completed\\", \\"report_job.updated\\", \\"ruleset.changed\\", \\"source.freshness_warning\\"]\n}"
             }
           }
         },
@@ -273,4 +290,3 @@
     }
   ]
 }
-
