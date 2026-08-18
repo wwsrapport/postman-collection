@@ -24,12 +24,32 @@
           "pm.request.headers.upsert({ key: 'Accept', value: 'application/json' });",
           "if (!pm.request.headers.has('Content-Type') && ['POST', 'PATCH'].includes(pm.request.method)) {",
           "  pm.request.headers.upsert({ key: 'Content-Type', value: 'application/json' });",
-          "}"
+          "}",
+          "[['X-WWS-Municipality-Code', 'municipality_code'], ['X-WWS-Purpose-Code', 'purpose_code'], ['X-WWS-Case-Reference', 'case_reference'], ['X-WWS-Client-Reference', 'client_reference']].forEach(([header, variable]) => {",
+          "  const value = pm.environment.get(variable);",
+          "  if (value) pm.request.headers.upsert({ key: header, value });",
+          "});"
         ]
       }
     }
   ],
   "item": [
+    {
+      "name": "OAuth 2.0",
+      "item": [
+        {
+          "name": "Client credentials token",
+          "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.access_token) pm.environment.set('api_key', json.access_token);"]}}],
+          "request": {
+            "auth": {"type": "basic", "basic": [{"key": "username", "value": "{{oauth_client_id}}", "type": "string"}, {"key": "password", "value": "{{oauth_client_secret}}", "type": "string"}]},
+            "method": "POST",
+            "header": [{"key": "Accept", "value": "application/json"}, {"key": "Content-Type", "value": "application/x-www-form-urlencoded"}],
+            "url": "{{origin_url}}/oauth/token",
+            "body": {"mode": "urlencoded", "urlencoded": [{"key": "grant_type", "value": "client_credentials"}, {"key": "scope", "value": "{{oauth_scopes}}"}]}
+          }
+        }
+      ]
+    },
     {
       "name": "Solana registry",
       "item": [
@@ -207,6 +227,18 @@
       ]
     },
     {
+      "name": "Public sector lifecycle",
+      "item": [
+        {"name": "Create batch", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{idempotency_key}}"}], "url": "{{base_url}}/batches", "body": {"mode": "raw", "raw": "{\n  \"type\": \"address_check\",\n  \"items\": [{\"external_reference\": \"case-001\", \"postcode\": \"3905RB\", \"house_number\": 4}]\n}"}}},
+        {"name": "Get batch", "request": {"method": "GET", "url": "{{base_url}}/batches/{{batch_id}}"}},
+        {"name": "Retry batch", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{idempotency_key}}"}], "url": "{{base_url}}/batches/{{batch_id}}/retry"}},
+        {"name": "Record human review", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{idempotency_key}}"}], "url": "{{base_url}}/reports/{{report_id}}/human-review", "body": {"mode": "raw", "raw": "{\n  \"status\": \"approved\",\n  \"reviewer_reference\": \"reviewer-001\",\n  \"notes\": \"Human review completed\"\n}"}}},
+        {"name": "Request tenant export", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{idempotency_key}}"}], "url": "{{base_url}}/exports", "body": {"mode": "raw", "raw": "{}"}}},
+        {"name": "Get tenant export", "request": {"method": "GET", "url": "{{base_url}}/exports/{{export_id}}"}},
+        {"name": "Request offboarding", "request": {"method": "POST", "url": "{{base_url}}/offboarding", "body": {"mode": "raw", "raw": "{\n  \"confirmation\": \"REQUEST_OFFBOARDING\",\n  \"requested_by_reference\": \"administrator-001\"\n}"}}}
+      ]
+    },
+    {
       "name": "Webhooks",
       "item": [
         {
@@ -236,7 +268,7 @@
             "url": "{{base_url}}/webhooks",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"url\": \"https://example.com/wwsrapport/webhook\",\n  \"events\": [\\"report.queued\\", \\"report.processing\\", \\"report.calculation.ready\\", \\"report.improvement-advice.ready\\", \\"report.blockchain.finalized\\", \\"report.completed\\", \\"report.failed\\", \\"report.issued\\", \\"report.signature.completed\\", \\"report.signature.failed\\", \\"report.registry.submitted\\", \\"report.registry.confirmed\\", \\"report.registry.failed\\", \\"report.superseded\\", \\"report.cancelled\\", \\"report.documents.ready\\", \\"report.document.failed\\", \\"monitor.created\\", \\"monitor.updated\\", \\"monitor.check_completed\\", \\"monitor.event_created\\", \\"monitor.event_resolved\\", \\"impact_preview.created\\", \\"listing_check.completed\\", \\"report_job.updated\\", \\"ruleset.changed\\", \\"source.freshness_warning\\"],\n  \"description\": \"Postman demo endpoint\",\n  \"enabled\": true\n}"
+              "raw": "{\n  \"url\": \"https://example.com/wwsrapport/webhook\",\n  \"events\": [\"report.queued\", \"report.processing\", \"report.calculation.ready\", \"report.improvement-advice.ready\", \"report.blockchain.finalized\", \"report.completed\", \"report.failed\", \"report.issued\", \"report.signature.completed\", \"report.signature.failed\", \"report.registry.submitted\", \"report.registry.confirmed\", \"report.registry.failed\", \"report.superseded\", \"report.cancelled\", \"report.documents.ready\", \"report.document.failed\", \"monitor.created\", \"monitor.updated\", \"monitor.check_completed\", \"monitor.event_created\", \"monitor.event_resolved\", \"impact_preview.created\", \"listing_check.completed\", \"report_job.updated\", \"ruleset.changed\", \"source.freshness_warning\"],\n  \"description\": \"Postman demo endpoint\",\n  \"enabled\": true\n}"
             }
           }
         },
@@ -254,7 +286,7 @@
             "url": "{{base_url}}/webhooks/{{webhook_id}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"enabled\": true,\n  \"events\": [\\"report.queued\\", \\"report.processing\\", \\"report.calculation.ready\\", \\"report.improvement-advice.ready\\", \\"report.blockchain.finalized\\", \\"report.completed\\", \\"report.failed\\", \\"report.issued\\", \\"report.signature.completed\\", \\"report.signature.failed\\", \\"report.registry.submitted\\", \\"report.registry.confirmed\\", \\"report.registry.failed\\", \\"report.superseded\\", \\"report.cancelled\\", \\"report.documents.ready\\", \\"report.document.failed\\", \\"monitor.created\\", \\"monitor.updated\\", \\"monitor.check_completed\\", \\"monitor.event_created\\", \\"monitor.event_resolved\\", \\"impact_preview.created\\", \\"listing_check.completed\\", \\"report_job.updated\\", \\"ruleset.changed\\", \\"source.freshness_warning\\"]\n}"
+              "raw": "{\n  \"enabled\": true,\n  \"events\": [\"report.queued\", \"report.processing\", \"report.calculation.ready\", \"report.improvement-advice.ready\", \"report.blockchain.finalized\", \"report.completed\", \"report.failed\", \"report.issued\", \"report.signature.completed\", \"report.signature.failed\", \"report.registry.submitted\", \"report.registry.confirmed\", \"report.registry.failed\", \"report.superseded\", \"report.cancelled\", \"report.documents.ready\", \"report.document.failed\", \"monitor.created\", \"monitor.updated\", \"monitor.check_completed\", \"monitor.event_created\", \"monitor.event_resolved\", \"impact_preview.created\", \"listing_check.completed\", \"report_job.updated\", \"ruleset.changed\", \"source.freshness_warning\"]\n}"
             }
           }
         },
